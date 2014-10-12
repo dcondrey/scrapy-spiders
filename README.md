@@ -7,6 +7,10 @@ lead generation projects to match keywords and collect email addresses and post 
 Each script is organized within it's own folder and then combined into a single run 
 script within the 'dist' folder.
 
+Contribute
+-------
+If you create a new crawler, please add it to the repo and send me a pull request.  I'd like to build this up as a collection beyond just these few I wrote myself.
+
 Spiders
 -------
 
