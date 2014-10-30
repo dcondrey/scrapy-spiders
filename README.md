@@ -1,5 +1,10 @@
-Scrapy-Spiders
-==============
+This repo is examples of webcrawlers built using the Scrapy python framework.  For more details about Scrapy..
+
+ - [Scrapy Framework](https://github.com/scrapy/scrapy/)
+ - [Wiki](https://github.com/scrapy/scrapy/wiki)
+
+Scrapy-Spiders (functional examples)
+====================================
 
 Collection of python scripts I have created to crawl various websites, mostly for 
 lead generation projects to match keywords and collect email addresses and post URLs.
@@ -8,7 +13,7 @@ Each script is organized within it's own folder and then combined into a single 
 script within the 'dist' folder.
 
 Contribute
--------
+----------
 If you create a new crawler, please add it to the repo and send me a pull request.  I'd like to build this up as a collection beyond just these few I wrote myself.
 
 Spiders
@@ -80,8 +85,7 @@ etc..
 
 !!WARNING!!
 ===========
-
 You should not scrape any website that you do not own unless you have gotten consent from the 
-webmaster of the site.  Using these scripts, can and will cause your IP address to be blacklisted 
-if used abusively and/or incorrectly.  This repository is for reference purposes only and should not be
-run on a live network connection.
+webmaster of the site.  Using these scripts, can and will cause you to be blacklisted if used 
+abusively and/or incorrectly.  This repository is for reference purposes only and should not be
+run on a live environment.
