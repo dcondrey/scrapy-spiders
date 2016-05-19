@@ -5,7 +5,7 @@
 
 from scrapy.item import Item, Field
 
-class CraigdatedItem(Item):
+class CraigItem(Item):
     # define the fields for your item here like:
     # name = Field()
     pass
