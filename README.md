@@ -12,7 +12,42 @@
 
 ---
 
+A set of Scrapy crawlers written for lead-generation work: each one walks a job or production
+listing site, matches posts against keywords, and collects contact email addresses along with
+the URL of the post they came from.
+
+## The spiders
+
+| Directory | Site |
+|---|---|
+| `craig` | Craigslist |
+| `mandy` | Mandy.com (film and TV crew) |
+| `entcareers` | EntertainmentCareers.net |
+| `productionhub` | ProductionHub |
+| `reelscout` | ReelScout |
+| `newenglandfilm` | NewEnglandFilm.com |
+
+Each directory is a self-contained Scrapy project with its own `scrapy.cfg`; several keep the
+last run's output alongside it (`outfile.txt` / `output.txt`) as a sample of the shape of the
+data.
+
+## Run one
+
+```bash
+cd mandy
+scrapy crawl <spider-name> -o results.json
+```
+
+`scrapy list` inside a project directory prints the spider names it defines.
+
 ## Dependencies
 
 - Python 2.7
 - [Scrapy](https://github.com/scrapy/scrapy/)
+
+## Status
+
+Archived as written. These target Python 2.7 and the Scrapy API of the time, and the sites they
+crawl have all changed their markup since -- treat the selectors as a starting point, not as
+something that still runs unmodified. Check each site's terms of service and `robots.txt`
+before pointing a crawler at it.
