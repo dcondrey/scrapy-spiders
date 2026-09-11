@@ -3,6 +3,7 @@ from datetime import datetime
 
 import scrapy
 
+from scrapyspiders.emailmatch import find_emails
 from scrapyspiders.items import EmailLeadItem
 from scrapyspiders.keywords import KEYWORDS
 
@@ -42,7 +43,6 @@ class ProductionhubSpider(scrapy.Spider):
                 yield response.follow(link, callback=self.parse_page)
 
     def parse_page(self, response):
-        emails = response.text
-        for email in re.findall(r"(\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,6})", emails):
+        for email in find_emails(response.text):
             if email not in IGNORED_EMAILS:
                 yield EmailLeadItem(email=email, source_url=response.url, spider=self.name)

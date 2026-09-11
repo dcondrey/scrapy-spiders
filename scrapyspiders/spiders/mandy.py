@@ -3,6 +3,7 @@ from datetime import datetime
 
 import scrapy
 
+from scrapyspiders.emailmatch import find_first_email
 from scrapyspiders.items import EmailLeadItem
 from scrapyspiders.keywords import KEYWORDS
 
@@ -37,7 +38,6 @@ class MandySpider(scrapy.Spider):
                 yield response.follow(link, callback=self.parse_page)
 
     def parse_page(self, response):
-        email = response.text
-        match = re.search(r"(\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,6})", email)
-        if match:
-            yield EmailLeadItem(email=match.group(1), source_url=response.url, spider=self.name)
+        email = find_first_email(response.text)
+        if email:
+            yield EmailLeadItem(email=email, source_url=response.url, spider=self.name)

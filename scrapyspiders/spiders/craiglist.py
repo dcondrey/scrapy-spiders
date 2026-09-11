@@ -14,6 +14,9 @@ class CraiglistSpider(scrapy.Spider):
 
     # TODO: positional-index XPaths below (div[N]/p[N]) are unverified
     # against current craigslist markup; treat as a starting point.
+    # TODO: listing dates carry no year, so current_date matching is
+    # ambiguous across a year boundary; harmless day-to-day, wrong for
+    # exactly one day each December 31 / January 1.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.keywords = [re.sub(" ", "+", k) for k in KEYWORDS]
