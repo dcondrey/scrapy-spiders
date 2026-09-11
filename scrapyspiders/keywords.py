@@ -1,0 +1,26 @@
+"""Search terms every spider queries its target site with."""
+
+KEYWORDS = [
+    "feature film",
+    "indie film",
+    "film production",
+    "independent film",
+    "film casting",
+    "movie casting",
+    "extras casting",
+    "film editor",
+    "movie editor",
+    "post production",
+    "movie production",
+    "line producer",
+    "production manager",
+    "editor",
+    "colorist",
+    "visual effects",
+    "sound design",
+    "VFX",
+    "motion picture",
+    "film sales",
+    "film distribution",
+    "film budget",
+]

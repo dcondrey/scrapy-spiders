@@ -18,36 +18,39 @@ the URL of the post they came from.
 
 ## The spiders
 
-| Directory | Site |
+One Scrapy project, `scrapyspiders/`, with five spiders:
+
+| Spider name | Site |
 |---|---|
-| `craig` | Craigslist |
+| `craiglist` | Craigslist |
 | `mandy` | Mandy.com (film and TV crew) |
-| `entcareers` | EntertainmentCareers.net |
+| `entertainmentcareers` | EntertainmentCareers.net |
 | `productionhub` | ProductionHub |
-| `reelscout` | ReelScout |
 | `newenglandfilm` | NewEnglandFilm.com |
 
-Each directory is a self-contained Scrapy project with its own `scrapy.cfg`; several keep the
-last run's output alongside it (`outfile.txt` / `output.txt`) as a sample of the shape of the
-data.
+Each spider yields an `EmailLeadItem` (`email`, `source_url`, `spider`); a pipeline
+(`scrapyspiders/pipelines.py`) dedupes against `<spider name>.txt` and appends new
+addresses to it.
 
 ## Run one
 
 ```bash
-cd mandy
-scrapy crawl <spider-name> -o results.json
+uv sync
+uv run scrapy crawl <spider-name> -o results.json
 ```
 
-`scrapy list` inside a project directory prints the spider names it defines.
+`uv run scrapy list` prints the five spider names.
 
 ## Dependencies
 
-- Python 2.7
-- [Scrapy](https://github.com/scrapy/scrapy/)
+- Python >= 3.10
+- [Scrapy](https://github.com/scrapy/scrapy/) 2.19+, pinned in `pyproject.toml` / `uv.lock`
 
 ## Status
 
-Archived as written. These target Python 2.7 and the Scrapy API of the time, and the sites they
-crawl have all changed their markup since -- treat the selectors as a starting point, not as
-something that still runs unmodified. Check each site's terms of service and `robots.txt`
-before pointing a crawler at it.
+Ported from a Python 2.7 / pre-2015 Scrapy codebase to run on current Python and Scrapy.
+`scrapy list` importing all five spiders is the only thing verified; the XPath selectors
+target each site's markup as it existed years ago and are unverified against the current
+pages -- treat them as a starting point, not as something that still returns results
+unmodified. Check each site's terms of service and `robots.txt` before pointing a crawler
+at it.
