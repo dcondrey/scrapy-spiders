@@ -8,8 +8,11 @@ class EmailDedupePipeline:
 
     def open_spider(self, spider):
         self.path = Path(f"{spider.name}.txt")
-        self.seen = set(self.path.read_text().splitlines()) if self.path.exists() else set()
-        self.handle = self.path.open("a")
+        if self.path.exists():
+            self.seen = set(self.path.read_text(encoding="utf-8").splitlines())
+        else:
+            self.seen = set()
+        self.handle = self.path.open("a", encoding="utf-8")
 
     def close_spider(self, spider):
         self.handle.close()
