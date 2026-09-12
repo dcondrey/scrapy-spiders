@@ -78,7 +78,7 @@ def test_recovers_when_classes_and_urls_both_change(ec_search_response):
 
 def test_inference_ignores_navigation_and_boilerplate(ec_search_response):
     """Recovery must not "succeed" by latching onto nav links."""
-    for pattern, _count, example in infer_listing_patterns(ec_search_response)[:3]:
+    for _pattern, _count, example in infer_listing_patterns(ec_search_response)[:3]:
         assert not re.search(r"/(about|privacy|terms|login|contact)", example)
 
 
