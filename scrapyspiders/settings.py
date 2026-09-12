@@ -1,3 +1,5 @@
+import os
+
 BOT_NAME = "scrapyspiders"
 
 SPIDER_MODULES = ["scrapyspiders.spiders"]
@@ -36,6 +38,25 @@ CLOSESPIDER_ITEMCOUNT = 2000
 HTTPCACHE_ENABLED = False
 HTTPCACHE_EXPIRATION_SECS = 3600
 HTTPCACHE_DIR = ".httpcache"
+
+# Browser TLS-fingerprint impersonation, OFF by default.
+#
+# Some sources (ProductionHub, Mandy) sit behind Cloudflare and reject
+# ordinary HTTP clients with a 403 regardless of user-agent. Impersonating a
+# browser's TLS fingerprint gets through. That is deliberately working around
+# an access control the operator put up, so it is opt-in and you should check
+# each site's terms first. ROBOTSTXT_OBEY stays on either way, and this does
+# not override a robots Disallow.
+#
+# Enable with: SCRAPY_IMPERSONATE=1 uv run scrapy crawl productionhub
+IMPERSONATE_ENABLED = os.environ.get("SCRAPY_IMPERSONATE") == "1"
+IMPERSONATE_BROWSER = os.environ.get("SCRAPY_IMPERSONATE_BROWSER", "chrome")
+
+if IMPERSONATE_ENABLED:
+    DOWNLOAD_HANDLERS = {
+        "http": "scrapy_impersonate.ImpersonateDownloadHandler",
+        "https": "scrapy_impersonate.ImpersonateDownloadHandler",
+    }
 
 DOWNLOADER_MIDDLEWARES = {
     "scrapyspiders.middlewares.BotChallengeDetectionMiddleware": 560,

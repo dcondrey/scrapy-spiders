@@ -25,6 +25,7 @@ class EntertainmentcareersSpider(ResilientListingSpider):
     )
 
     async def start(self):
+        meta = self.request_meta()
         for keyword in KEYWORDS:
             yield scrapy.Request(
                 url=(
@@ -32,4 +33,5 @@ class EntertainmentcareersSpider(ResilientListingSpider):
                     f"?zoom_query={quote_plus(keyword)}"
                 ),
                 callback=self.parse,
+                meta=meta,
             )

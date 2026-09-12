@@ -12,3 +12,4 @@ selector against them is testing the site's actual structure.
 | `craigslist_sitemap.xml` | https://www.craigslist.org/sitemap-postings-2026-09-11-sfo-jjj.xml (truncated to 200KB) |
 
 Recapture with the same URLs when a spider's selectors are updated.
+| `productionhub_detail.html` | https://www.productionhub.com/job/65062/producers-assistant (fetched with TLS impersonation; Cloudflare 403s plain clients) |

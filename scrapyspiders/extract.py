@@ -101,7 +101,10 @@ def iter_jsonld(response):
     """Every JSON-LD object embedded in the page, flattened through @graph."""
     for blob in response.xpath('//script[@type="application/ld+json"]/text()').getall():
         try:
-            data = json.loads(blob.strip())
+            # strict=False tolerates literal tabs and newlines inside string
+            # values. Hand-templated JSON-LD frequently contains them, and a
+            # strict parse silently drops the whole JobPosting block.
+            data = json.loads(blob.strip(), strict=False)
         except (ValueError, TypeError):
             continue
         stack = [data]
@@ -122,6 +125,24 @@ def jsonld_field(response, *field_names):
             value = node.get(name)
             if isinstance(value, str) and value.strip():
                 return value.strip()
+    return None
+
+
+def jsonld_raw_field(response, *field_names):
+    """Pull a scalar straight out of raw JSON-LD text.
+
+    Hand-templated JSON-LD is often invalid: unescaped quotes inside a
+    description will fail any parser. The fields worth having are simple
+    scalars near the top of the block, so recover them textually rather than
+    discarding an otherwise perfectly good JobPosting.
+    """
+    blocks = response.xpath('//script[@type="application/ld+json"]/text()').getall()
+    for name in field_names:
+        pattern = re.compile(rf'"{re.escape(name)}"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"')
+        for blob in blocks:
+            match = pattern.search(blob)
+            if match and match.group(1).strip():
+                return match.group(1).strip()
     return None
 
 
@@ -160,12 +181,14 @@ def extract_listing_fields(response):
 
     title = (
         nested(posting, "title")
+        or jsonld_raw_field(response, "title")
         or response.xpath('//meta[@property="og:title"]/@content').get()
         or response.xpath("//h1//text()").get()
         or response.xpath("//title/text()").get()
     )
     company = (
         nested(posting, "hiringOrganization", "name")
+        or jsonld_raw_field(response, "hiringOrganization")
         or response.xpath('//meta[@property="og:site_name"]/@content').get()
         or first_text_by_class_hint(response, ("company", "employer", "organization"))
     )
@@ -214,6 +237,12 @@ def extract_posted_date(response, today=None):
         parsed = parse_date_text(value, today=today)
         if parsed:
             return parsed, "jsonld"
+
+    raw = jsonld_raw_field(response, "datePosted", "datePublished", "dateCreated")
+    if raw:
+        parsed = parse_date_text(raw, today=today)
+        if parsed:
+            return parsed, "jsonld-raw"
 
     for xp in (
         '//meta[@property="article:published_time"]/@content',

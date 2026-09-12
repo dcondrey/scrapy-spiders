@@ -5,6 +5,7 @@ description = "Scrapy crawlers for lead generation across job/production listing
 requires-python = ">=3.10"
 dependencies = [
     "scrapy>=2.19,<3",
+    "scrapy-impersonate>=1.9.0",
 ]
 
 [build-system]

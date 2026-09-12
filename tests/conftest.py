@@ -44,3 +44,12 @@ def craigslist_sitemap_response():
         body=_body("craigslist_sitemap.xml"),
         encoding="utf-8",
     )
+
+
+@pytest.fixture
+def productionhub_detail_response():
+    return HtmlResponse(
+        url="https://www.productionhub.com/job/65062/producers-assistant",
+        body=_body("productionhub_detail.html"),
+        encoding="utf-8",
+    )

@@ -63,3 +63,22 @@ def test_craigslist_sitemap_lists_posting_urls(craigslist_sitemap_response):
     urls = sitemap_links(craigslist_sitemap_response)
     assert len(urls) > 10
     assert any("craigslist.org" in u for u in urls)
+
+
+def test_malformed_jsonld_still_yields_date_and_title(productionhub_detail_response):
+    """ProductionHub's JobPosting block has unescaped quotes in description.
+
+    No JSON parser accepts it, so the raw-scan fallback is the only thing
+    standing between a valid posting and a silently undated item.
+    """
+    from scrapyspiders.extract import iter_jsonld
+
+    types = [n.get("@type") for n in iter_jsonld(productionhub_detail_response)]
+    assert "JobPosting" not in types, "fixture should still be unparseable JSON"
+
+    posted, strategy = extract_posted_date(productionhub_detail_response)
+    assert posted == date(2026, 8, 12)
+    assert strategy == "jsonld-raw"
+
+    fields = extract_listing_fields(productionhub_detail_response)
+    assert fields["title"] == "Producer's Assistant"

@@ -17,13 +17,18 @@ UA = (
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
 
+# Each spider's real entry point, so a PASS here means the spider can start.
 SOURCES = {
     "entertainmentcareers": "https://www.entertainmentcareers.net/psearch/?zoom_query=film+editor",
     "craiglist": "https://www.craigslist.org/sitemap-index-postings-00.xml",
-    "mandy": "https://www.mandy.com/jobs?q=film+editor",
-    "productionhub": "https://www.productionhub.com/jobs",
-    "newenglandfilm": "https://wifvnejobs.org/",
+    "mandy": "https://www.mandy.com/",
+    "productionhub": "https://www.productionhub.com/jobs/type/film-movie",
+    "newenglandfilm": "https://wifvnejobs.org/wp-json/wp/v2/posts?per_page=1",
 }
+
+# Sources that only respond to an impersonated TLS fingerprint. Reported
+# separately so a plain-client 403 is not mistaken for the site being down.
+NEEDS_IMPERSONATION = {"productionhub", "mandy"}
 
 
 def probe(url):
@@ -55,13 +60,31 @@ def classify(body):
     return "ok"
 
 
+def probe_impersonated(url):
+    """Retry through curl_cffi, which presents a browser TLS fingerprint."""
+    try:
+        from curl_cffi import requests as cffi
+    except ImportError:
+        return None, "curl_cffi not installed"
+    try:
+        response = cffi.get(url, impersonate="chrome", timeout=30)
+        return response.status_code, classify(response.text[:20000])
+    except Exception as exc:  # noqa: BLE001 - reporting tool, any failure is a FAIL
+        return None, f"unreachable: {type(exc).__name__}"
+
+
 def main():
     usable = 0
     for name, url in sorted(SOURCES.items()):
         status, note = probe(url)
         healthy = status == 200 and note == "ok"
+        suffix = ""
+        if not healthy and name in NEEDS_IMPERSONATION:
+            status, note = probe_impersonated(url)
+            healthy = status == 200 and note == "ok"
+            suffix = "  (via impersonation)"
         usable += healthy
-        line = f"{'PASS' if healthy else 'FAIL'}  {name:22} {status}  {note}  {url}"
+        line = f"{'PASS' if healthy else 'FAIL'}  {name:22} {status}  {note}  {url}{suffix}"
         sys.stdout.write(line + "\n")
 
     sys.stdout.write(f"\n{usable}/{len(SOURCES)} sources usable\n")

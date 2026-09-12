@@ -22,19 +22,32 @@ Checked live on 2026-09-11. Run `uv run python scripts/check_sources.py` to rech
 
 | Spider | Site | Status |
 |---|---|---|
-| `entertainmentcareers` | EntertainmentCareers.net | **Working.** Listings come from keyword search; fields from schema.org JobPosting. |
+| `entertainmentcareers` | EntertainmentCareers.net | **Working.** Keyword search; fields from schema.org JobPosting. |
 | `craiglist` | Craigslist | **Working.** Driven by the public posting sitemaps. |
-| `mandy` | Mandy.com | Blocked by a Cloudflare challenge (HTTP 403). Needs a browser engine. |
-| `productionhub` | ProductionHub | Blocked by a Cloudflare JS challenge (HTTP 403). Needs a browser engine. |
-| `newenglandfilm` | NewEnglandFilm.com | Source retired. `jobs.htm` is 404 and the board moved to a site with no public listings. |
+| `productionhub` | ProductionHub | **Working with `SCRAPY_IMPERSONATE=1`.** Cloudflare 403s plain clients. |
+| `newenglandfilm` | WIFVNE job board | **Working.** Reads the WordPress REST API. Low volume. |
+| `mandy` | Mandy.com | Not working. Cloudflare blocks the whole domain including `robots.txt`, and the site is a JavaScript app with no server-rendered links. Needs a browser engine. |
 
 ### About emails
 
 Most boards no longer publish employer addresses. Craigslist proxies contact through `/reply`,
-which its `robots.txt` disallows, so those postings carry no email. EntertainmentCareers issues
-a per-listing relay address (`JOB-<id>-XX@entertainmentcareers.net`) on some postings, which
-does forward to the employer. `email` is therefore optional on every item, and the spiders are
-useful for the listing data whether or not an address is present.
+which its `robots.txt` disallows. EntertainmentCareers issues a per-listing relay address
+(`JOB-<id>-XX@entertainmentcareers.net`) on some postings, which does forward to the employer.
+`email` is therefore optional on every item, and the listing data is the primary output.
+
+### Cloudflare and impersonation
+
+ProductionHub rejects ordinary HTTP clients with a 403 no matter the user-agent, because the
+block keys on TLS fingerprint. Setting `SCRAPY_IMPERSONATE=1` routes requests through
+`curl_cffi`, which presents a real browser fingerprint, and the site then responds normally.
+
+This is off by default and it is your call to enable, because it works around an access control
+the operator put in place. Two things worth knowing before you do:
+
+- ProductionHub's `robots.txt` disallows `/jobs/search*`, so this project crawls the
+  robots-allowed `/jobs/type/<category>` indexes instead. `ROBOTSTXT_OBEY` stays on with
+  impersonation enabled; it does not override a `Disallow`.
+- Their `Content-Signal` header permits `search` and `reference` use and forbids `ai-train=no`.
 
 ## Run one
 
@@ -42,6 +55,8 @@ useful for the listing data whether or not an address is present.
 uv sync
 uv run scrapy crawl entertainmentcareers -a days=7 -o results.json
 uv run scrapy crawl craiglist -a days=2 -a cities=sfo,nyc,lax -o results.json
+uv run scrapy crawl newenglandfilm -o results.json
+SCRAPY_IMPERSONATE=1 uv run scrapy crawl productionhub -a days=30 -o results.json
 ```
 
 Spider arguments:

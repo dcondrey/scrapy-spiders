@@ -37,6 +37,13 @@ class ListingExtractionMixin:
     require_date = False
     require_email = False
 
+    def request_meta(self):
+        """Per-request meta, carrying the impersonation flag when enabled."""
+        settings = getattr(self, "settings", None)
+        if settings is not None and settings.getbool("IMPERSONATE_ENABLED"):
+            return {"impersonate": settings.get("IMPERSONATE_BROWSER", "chrome")}
+        return {}
+
     def init_diagnostics(self, days=None):
         self.max_age_days = int(days) if days is not None else self.default_max_age_days
         self.today = date.today()
@@ -147,6 +154,11 @@ class ResilientListingSpider(ListingExtractionMixin, scrapy.Spider):
             self.max_index_pages = int(max_pages)
         self.seen_listings = set()
 
+    async def start(self):
+        meta = self.request_meta()
+        for url in self.start_urls:
+            yield scrapy.Request(url, dont_filter=True, meta=meta)
+
     def parse(self, response):
         self.diag["index_pages"] += 1
         urls = discover_links(response, self.listing_url_pattern, self.index_hint_selectors)
@@ -160,7 +172,7 @@ class ResilientListingSpider(ListingExtractionMixin, scrapy.Spider):
         self.diag["listings_discovered"] += len(new_urls)
 
         for url in new_urls:
-            yield response.follow(url, callback=self.parse_listing)
+            yield response.follow(url, callback=self.parse_listing, meta=self.request_meta())
 
         if not urls:
             yield from self.recover_by_feed(response)
@@ -207,7 +219,7 @@ class ResilientListingSpider(ListingExtractionMixin, scrapy.Spider):
             href = response.xpath(selector).get()
             if href:
                 self.diag["pagination_followed"] += 1
-                yield response.follow(href, callback=self.parse)
+                yield response.follow(href, callback=self.parse, meta=self.request_meta())
                 return
 
     def closed(self, reason):
