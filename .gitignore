@@ -7,3 +7,7 @@ __pycache__/
 results.log
 *.txt
 !requirements*.txt
+.httpcache/
+.pytest_cache/
+*.json
+!.bestpractices.json

@@ -1,43 +1,27 @@
-import re
-from datetime import datetime
+from urllib.parse import quote_plus
 
 import scrapy
 
-from scrapyspiders.emailmatch import find_first_email
-from scrapyspiders.items import EmailLeadItem
+from scrapyspiders.base import ResilientListingSpider
 from scrapyspiders.keywords import KEYWORDS
 
 
-class MandySpider(scrapy.Spider):
+class MandySpider(ResilientListingSpider):
+    """Mandy.com crew and production jobs.
+
+    STATUS as of 2026-09-11: mandy.com sits behind a Cloudflare managed
+    challenge and returns HTTP 403 to every plain HTTP client, so this spider
+    yields nothing until it is run through a browser engine. The middleware
+    reports the challenge explicitly rather than letting the run look empty.
+    """
+
     name = "mandy"
     allowed_domains = ["mandy.com"]
+    listing_url_pattern = r"/job/[\w-]+|/jobs?/\d+"
 
-    def start_requests(self):
-        current_date = datetime.today().strftime("%d-%b-%Y")
-        self.current_date = current_date
-        for key in KEYWORDS:
-            query = re.sub(" ", "+", key)
+    async def start(self):
+        for keyword in KEYWORDS:
             yield scrapy.Request(
-                url=f"https://mandy.com/1/search.cfm?fs=1&place=wld&city=&what={query}&where=Worldwide",
+                url=f"https://www.mandy.com/jobs?q={quote_plus(keyword)}",
                 callback=self.parse,
             )
-
-    def parse(self, response):
-        dates = response.xpath(
-            '//*[@id="resultswrapper"]/section/div/div/div/div/span/text()'
-        ).getall()
-        links = response.xpath(
-            '//*[@id="resultswrapper"]/section/div/div/div/div/a/@href'
-        ).getall()
-        parsed_dates = []
-        for raw in dates:
-            match = re.findall(r"\w+:\D([A-Za-z0-9-]+)", raw)
-            parsed_dates.append(match[0] if match else None)
-        for link, date in zip(links, parsed_dates):
-            if date == self.current_date:
-                yield response.follow(link, callback=self.parse_page)
-
-    def parse_page(self, response):
-        email = find_first_email(response.text)
-        if email:
-            yield EmailLeadItem(email=email, source_url=response.url, spider=self.name)

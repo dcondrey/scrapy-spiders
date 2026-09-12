@@ -1,28 +1,18 @@
-from datetime import datetime
-
-import scrapy
-
-from scrapyspiders.items import EmailLeadItem
+from scrapyspiders.base import ResilientListingSpider
 
 
-class NewenglandfilmSpider(scrapy.Spider):
+class NewenglandfilmSpider(ResilientListingSpider):
+    """NewEnglandFilm.com job listings.
+
+    STATUS as of 2026-09-11: the original https://newenglandfilm.com/jobs.htm
+    returns 404. The site's jobs link now points at wifvnejobs.org, whose
+    public pages carry no listings (they appear to be behind membership), so
+    there is currently no anonymous listing index to crawl. The start URL
+    below follows the current link; the spider reports zero discoveries
+    rather than failing silently.
+    """
+
     name = "newenglandfilm"
-    allowed_domains = ["newenglandfilm.com"]
-    start_urls = ["https://newenglandfilm.com/jobs.htm"]
-
-    # TODO: fixed div[1..30] indexing is unverified against current markup
-    # and raises IndexError if the listing page has fewer entries.
-    def parse(self, response):
-        current_date = datetime.today().strftime("%m/%d/%Y")
-        for num_div in range(1, 31):
-            dates = response.xpath(f'//*[@id="mainContent"]/div[{num_div}]/span/text()').re(
-                r"(\d{1,2}/\d{1,2}/\d{4})"
-            )
-            if not dates:
-                continue
-            emails = response.xpath(f'//*[@id="mainContent"]/div[{num_div}]/div/text()').re(
-                r"(\w+@[a-zA-Z0-9_]+?\.[a-zA-Z]{2,6})"
-            )
-            if dates[0] == current_date:
-                for address in emails:
-                    yield EmailLeadItem(email=address, source_url=response.url, spider=self.name)
+    allowed_domains = ["newenglandfilm.com", "wifvnejobs.org"]
+    start_urls = ["https://wifvnejobs.org/"]
+    listing_url_pattern = r"/jobs?/[\w-]+|/[\w-]+/job/\d+"

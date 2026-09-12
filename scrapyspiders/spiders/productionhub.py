@@ -1,48 +1,28 @@
-import re
-from datetime import datetime
+from urllib.parse import quote_plus
 
 import scrapy
 
-from scrapyspiders.emailmatch import find_emails
-from scrapyspiders.items import EmailLeadItem
+from scrapyspiders.base import ResilientListingSpider
 from scrapyspiders.keywords import KEYWORDS
 
-IGNORED_EMAILS = {"press@productionhub.com"}
 
+class ProductionhubSpider(ResilientListingSpider):
+    """ProductionHub job board.
 
-class ProductionhubSpider(scrapy.Spider):
+    STATUS as of 2026-09-11: productionhub.com serves a Cloudflare JS
+    challenge ("Just a moment...") and returns HTTP 403 to plain HTTP
+    clients, so this spider yields nothing until it is run through a browser
+    engine.
+    """
+
     name = "productionhub"
     allowed_domains = ["productionhub.com"]
+    listing_url_pattern = r"/jobs?/[\w-]+/?$|/jobs?/\d+"
+    ignored_emails = frozenset({"press@productionhub.com"})
 
-    def start_requests(self):
-        self.current_date = datetime.today().strftime("%m.%d.%Y")
-        for key in KEYWORDS:
-            query = re.sub(" ", "%20", key)
+    async def start(self):
+        for keyword in KEYWORDS:
             yield scrapy.Request(
-                url=f"https://www.productionhub.com/jobs/search?q={query}",
+                url=f"https://www.productionhub.com/jobs/search?q={quote_plus(keyword)}",
                 callback=self.parse,
             )
-
-    def parse(self, response):
-        count = response.xpath('//*[@id="main-content"]/div[3]/div/text()').re(r"\w+")
-        if not count:
-            return
-        total = int(count[-1])
-        for num_page in range(1, total + 1):
-            yield response.follow(
-                f"{response.url}&page={num_page}", callback=self.parse_count_page
-            )
-
-    def parse_count_page(self, response):
-        links = response.xpath('//*[@id="main-content"]/div/div/div/h4/a/@href').getall()
-        dates = response.xpath(
-            '//*[@id="main-content"]/div[2]/div/div/div/footer/span/text()'
-        ).re(r"(\d{1,2}/\d{1,2}/\d{4})")
-        for link, date in zip(links, dates):
-            if datetime.strptime(date, "%m/%d/%Y").strftime("%m.%d.%Y") == self.current_date:
-                yield response.follow(link, callback=self.parse_page)
-
-    def parse_page(self, response):
-        for email in find_emails(response.text):
-            if email not in IGNORED_EMAILS:
-                yield EmailLeadItem(email=email, source_url=response.url, spider=self.name)

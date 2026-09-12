@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  schedule:
+    # Weekly: catches sites redesigning or starting to block us, which is
+    # how these spiders actually break.
+    - cron: "0 6 * * 1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format check
+        run: uv run ruff format --check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Spiders importable
+        run: |
+          set -euo pipefail
+          names=$(uv run scrapy list)
+          echo "$names"
+          test "$(echo "$names" | wc -l)" -eq 5
+
+  reachability:
+    # Separate job: depends on third-party sites, so a failure here means the
+    # web changed, not that the code did. Does not block the test job.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - name: Check spider start URLs still respond
+        run: uv run python scripts/check_sources.py

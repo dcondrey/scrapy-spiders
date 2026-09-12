@@ -17,4 +17,15 @@ packages = ["scrapyspiders"]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "ruff>=0.16.7",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

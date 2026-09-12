@@ -1,33 +1,35 @@
-import re
+from urllib.parse import quote_plus
 
 import scrapy
 
-from scrapyspiders.emailmatch import find_first_email
-from scrapyspiders.items import EmailLeadItem
+from scrapyspiders.base import ResilientListingSpider
 from scrapyspiders.keywords import KEYWORDS
 
 
-class EntertainmentcareersSpider(scrapy.Spider):
+class EntertainmentcareersSpider(ResilientListingSpider):
+    """EntertainmentCareers.net keyword search.
+
+    Detail pages publish a schema.org JobPosting block, so title, company,
+    location and date all come from structured data rather than markup.
+    """
+
     name = "entertainmentcareers"
     allowed_domains = ["entertainmentcareers.net"]
 
-    # TODO: selectors are unverified against current entertainmentcareers.net
-    # markup; this spider never ran previously (the old source had a
-    # syntax error and could not be imported).
-    def start_requests(self):
-        for key in KEYWORDS:
-            query = re.sub(" ", "+", key)
+    # Verified 2026-09-11: /<company-slug>/<title-slug>/job/<id>/
+    listing_url_pattern = r"/[\w-]+/[\w-]+/job/\d+/?$"
+    index_hint_selectors = (
+        '//div[contains(@class,"result_title")]//a/@href',
+        '//div[contains(@class,"result_block")]//a/@href',
+        '//div[contains(@class,"result_altblock")]//a/@href',
+    )
+
+    async def start(self):
+        for keyword in KEYWORDS:
             yield scrapy.Request(
-                url=f"https://www.entertainmentcareers.net/psearch/?zoom_query={query}",
+                url=(
+                    "https://www.entertainmentcareers.net/psearch/"
+                    f"?zoom_query={quote_plus(keyword)}"
+                ),
                 callback=self.parse,
             )
-
-    def parse(self, response):
-        links = response.xpath('//*[@class="results_title"]/a/@href').getall()
-        for link in links:
-            yield response.follow(link, callback=self.parse_page)
-
-    def parse_page(self, response):
-        email = find_first_email(response.text)
-        if email:
-            yield EmailLeadItem(email=email, source_url=response.url, spider=self.name)
