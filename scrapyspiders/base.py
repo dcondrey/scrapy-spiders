@@ -95,7 +95,10 @@ class ListingExtractionMixin:
     def within_window(self, posted):
         if self.max_age_days is None:
             return True
-        return timedelta(0) <= (self.today - posted) <= timedelta(days=self.max_age_days)
+        age = self.today - posted
+        # Allow one day of slack in the future: a listing posted today in a
+        # timezone ahead of ours carries tomorrow's date and is still current.
+        return timedelta(days=-1) <= age <= timedelta(days=self.max_age_days)
 
     def report_diagnostics(self):
         self.logger.info(
