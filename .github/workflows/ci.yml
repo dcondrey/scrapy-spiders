@@ -9,6 +9,9 @@ on:
     # how these spiders actually break.
     - cron: "0 6 * * 1"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
