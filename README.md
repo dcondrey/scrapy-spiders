@@ -1,16 +1,8 @@
-<!-- repo-header:start -->
-<h3 align="center">Scrapy-Spiders</h3>
+### Scrapy-Spiders
 
-<p align="center"><strong>Scrapy crawlers that collect film and TV production job listings from industry job boards</strong></p>
+Scrapy crawlers that collect film and TV production job listings from industry job boards.
 
-<p align="center">
-  <a href="https://github.com/dcondrey/scrapy-spiders/actions"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/scrapy-spiders/ci.yml?style=flat-square&labelColor=20232a&label=CI" alt="CI"></a>
-  <a href="https://github.com/dcondrey/scrapy-spiders/blob/master/LICENSE"><img src="https://img.shields.io/github/license/dcondrey/scrapy-spiders?style=flat-square&labelColor=20232a&color=007ec6&label=license" alt="License"></a>
-  <a href="https://github.com/sponsors/dcondrey"><img src="https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=flat-square&labelColor=20232a" alt="GitHub Sponsors"></a>
-</p>
-<!-- repo-header:end -->
-
----
+[![CI](https://img.shields.io/github/actions/workflow/status/dcondrey/scrapy-spiders/ci.yml?branch=master&style=flat-square&label=CI)](https://github.com/dcondrey/scrapy-spiders/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/dcondrey/scrapy-spiders?style=flat-square)](https://github.com/dcondrey/scrapy-spiders/blob/master/LICENSE)
 
 A single Scrapy project that walks film and TV production job boards, keeps postings matching
 a keyword list, and records title, company, location, posting date, source URL, and a contact
