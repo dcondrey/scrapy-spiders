@@ -6,6 +6,7 @@ fixtures/PROVENANCE.md for capture URLs and dates.
 """
 
 from datetime import date
+from urllib.parse import urlparse
 
 from scrapyspiders.discovery import infer_listing_patterns, sitemap_links
 from scrapyspiders.extract import (
@@ -62,7 +63,7 @@ def test_craigslist_detail_date_comes_from_time_element(craigslist_detail_respon
 def test_craigslist_sitemap_lists_posting_urls(craigslist_sitemap_response):
     urls = sitemap_links(craigslist_sitemap_response)
     assert len(urls) > 10
-    assert any("craigslist.org" in u for u in urls)
+    assert any(urlparse(u).hostname.endswith("craigslist.org") for u in urls)
 
 
 def test_malformed_jsonld_still_yields_date_and_title(productionhub_detail_response):
